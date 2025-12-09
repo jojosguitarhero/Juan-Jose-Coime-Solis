@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Puntajes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef2f3;
+            padding: 30px;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .container {
+            width: 60%;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #aaa;
+        }
+        input, select, button {
+            margin: 5px 0;
+            padding: 8px;
+            font-size: 16px;
+        }
+        button {
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .hidden {
+            display: none;
+        }
+        .puntaje-item {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Sistema de Puntajes</h1>
+
+    <div id="etapa-cantidad">
+        <h2>Ingrese la cantidad de puntajes (5 a 15)</h2>
+        <input type="number" id="cantidad" min="5" max="15">
+        <button onclick="guardarCantidad()">Continuar</button>
+        <p id="error-cantidad" style="color:red;"></p>
+    </div>
+
+    <div id="etapa-puntajes" class="hidden">
+        <h2>Ingrese los puntajes</h2>
+        <div id="puntajes-inputs"></div>
+        <button onclick="procesarPuntajes()">Procesar</button>
+        <p id="error-puntajes" style="color:red;"></p>
+    </div>
+
+    <div id="resultados" class="hidden">
+        <h2>Resultados</h2>
+        <p id="resumen"></p>
+        <button onclick="mostrarMenu()">Ir al Menú</button>
+    </div>
+
+    <div id="menu" class="hidden">
+        <h2>Menú Interactivo</h2>
+        <select id="opcion-menu">
+            <option value="1">Ver todos los puntajes</option>
+            <option value="2">Ver puntajes aprobados (≥ 60)</option>
+            <option value="3">Ver puntajes reprobados (< 60)</option>
+            <option value="4">Salir</option>
+        </select>
+        <button onclick="ejecutarOpcion()">Aceptar</button>
+        <div id="menu-result" style="margin-top:20px;"></div>
+    </div>
+</div>
+
+<script>
+let cantidad = 0;
+let puntajes = [];
+
+function guardarCantidad() {
+    const input = document.getElementById("cantidad");
+    cantidad = parseInt(input.value);
+    const error = document.getElementById("error-cantidad");
+
+    if (isNaN(cantidad) || cantidad < 5 || cantidad > 15) {
+        error.textContent = "Debe ingresar un número entre 5 y 15.";
+        return;
+    }
+
+    error.textContent = "";
+    generarInputsPuntajes();
+    document.getElementById("etapa-cantidad").classList.add("hidden");
+    document.getElementById("etapa-puntajes").classList.remove("hidden");
+}
+
+function generarInputsPuntajes() {
+    const container = document.getElementById("puntajes-inputs");
+    container.innerHTML = "";
+    for (let i = 0; i < cantidad; i++) {
+        const div = document.createElement("div");
+        div.className = "puntaje-item";
+        div.innerHTML = `Puntaje ${i + 1}: <input type="number" min="0" max="100" id="p${i}">`;
+        container.appendChild(div);
+    }
+}
+
+function procesarPuntajes() {
+    const error = document.getElementById("error-puntajes");
+    puntajes = [];
+    for (let i = 0; i < cantidad; i++) {
+        const val = parseInt(document.getElementById(`p${i}`).value);
+        if (isNaN(val) || val < 0 || val > 100) {
+            error.textContent = `Todos los puntajes deben estar entre 0 y 100. Error en puntaje ${i + 1}.`;
+            return;
+        }
+        puntajes.push(val);
+    }
+
+    error.textContent = "";
+    mostrarResultados();
+    document.getElementById("etapa-puntajes").classList.add("hidden");
+    document.getElementById("resultados").classList.remove("hidden");
+}
+
+function mostrarResultados() {
+    let max = Math.max(...puntajes);
+    let min = Math.min(...puntajes);
+    let suma = puntajes.reduce((a,b) => a+b, 0);
+    let promedio = (suma / cantidad).toFixed(2);
+    let mayores90 = puntajes.filter(p => p >= 90).length;
+
+    document.getElementById("resumen").innerHTML =
+        `Puntaje más alto: <b>${max}</b><br>` +
+        `Puntaje más bajo: <b>${min}</b><br>` +
+        `Promedio: <b>${promedio}</b><br>` +
+        `Cantidad de puntajes ≥ 90: <b>${mayores90}</b>`;
+}
+
+function mostrarMenu() {
+    document.getElementById("resultados").classList.add("hidden");
+    document.getElementById("menu").classList.remove("hidden");
+    document.getElementById("menu-result").innerHTML = "";
+}
+
+function ejecutarOpcion() {
+    const opcion = document.getElementById("opcion-menu").value;
+    let resultado = document.getElementById("menu-result");
+    resultado.innerHTML = "";
+
+    if (opcion == "1") {
+        resultado.innerHTML = "<b>Todos los puntajes:</b><br>" + puntajes.join("<br>");
+    } else if (opcion == "2") {
+        let aprobados = puntajes.filter(p => p >= 60);
+        resultado.innerHTML = "<b>Puntajes aprobados (≥60):</b><br>" + (aprobados.length > 0 ? aprobados.join("<br>") : "No hay aprobados.");
+    } else if (opcion == "3") {
+        let reprobados = puntajes.filter(p => p < 60);
+        resultado.innerHTML = "<b>Puntajes reprobados (<60):</b><br>" + (reprobados.length > 0 ? reprobados.join("<br>") : "No hay reprobados.");
+    } else if (opcion == "4") {
+        resultado.innerHTML = "<b>Gracias por usar el sistema.</b>";
+    }
+}
+</script>
+
+</body>
+</html>
